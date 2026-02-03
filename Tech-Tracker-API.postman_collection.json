@@ -1,0 +1,331 @@
+{
+  "info": {
+    "_postman_id": "tech-tracker-api-collection",
+    "name": "Tech Tracker API",
+    "description": "Complete API collection for Tech Tracker Backend - Admin assigns work to Technician, Technician accepts and tracks location until completion",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Admins",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Job to Technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix Network Issue\",\n  \"description\": \"Router not working properly, needs diagnostic and repair\",\n  \"address\": \"123 Main St, New York, NY 10001\",\n  \"adminId\": \"{{admin_id}}\",\n  \"techId\": \"{{tech_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/assign-job",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "assign-job"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "jobs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Job by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/jobs/{{job_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "jobs", "{{job_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Technician",
+      "item": [
+        {
+          "name": "Register Technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mike Technician\",\n  \"email\": \"tech@example.com\",\n  \"password\": \"tech123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/technician/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Technicians",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/technician/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "all"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Technician by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/technician/{{tech_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "{{tech_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Technician Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/technician/{{tech_id}}/jobs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "{{tech_id}}", "jobs"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Job Workflow",
+      "item": [
+        {
+          "name": "1. Accept Job",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/jobs/{{job_id}}/accept",
+              "host": ["{{base_url}}"],
+              "path": ["api", "jobs", "{{job_id}}", "accept"]
+            },
+            "description": "Technician accepts the assigned job"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Start Job (Enable Tracking)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"techId\": \"{{tech_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs/{{job_id}}/start",
+              "host": ["{{base_url}}"],
+              "path": ["api", "jobs", "{{job_id}}", "start"]
+            },
+            "description": "Start the job and enable location tracking"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Complete Job (Disable Tracking)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"techId\": \"{{tech_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/jobs/{{job_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "jobs", "{{job_id}}", "complete"]
+            },
+            "description": "Complete the job and turn off location tracking"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Location Tracking",
+      "item": [
+        {
+          "name": "Toggle Location Tracking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isTracking\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/technician/{{tech_id}}/toggle-tracking",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "{{tech_id}}", "toggle-tracking"]
+            },
+            "description": "Manually toggle location tracking on/off"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Location History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/technician/{{tech_id}}/location-history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "{{tech_id}}", "location-history"]
+            },
+            "description": "Get location history for a technician"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "admin_id",
+      "value": "your-admin-id",
+      "type": "string"
+    },
+    {
+      "key": "tech_id",
+      "value": "your-tech-id",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "your-job-id",
+      "type": "string"
+    }
+  ]
+}

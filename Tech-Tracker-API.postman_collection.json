@@ -1,16 +1,195 @@
 {
   "info": {
-    "_postman_id": "tech-tracker-api-collection",
-    "name": "Tech Tracker API",
-    "description": "Complete API collection for Tech Tracker Backend - Admin assigns work to Technician, Technician accepts and tracks location until completion",
+    "_postman_id": "tech-tracker-api-collection-v2",
+    "name": "Tech Tracker API - With Auth",
+    "description": "Complete API with JWT Authentication - Admin and Technician login with Bearer tokens",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
-      "name": "Admin",
+      "name": "🔐 Authentication",
       "item": [
         {
-          "name": "Register Admin",
+          "name": "Admin Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_id', jsonData.admin.id);",
+                  "    pm.collectionVariables.set('admin_token', jsonData.token);",
+                  "    pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"superadmin@test.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "register"]
+            },
+            "description": "Register a new admin and get JWT token"
+          }
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('admin_id', jsonData.admin.id);",
+                  "    pm.collectionVariables.set('admin_token', jsonData.token);",
+                  "    pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@test.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "login"]
+            },
+            "description": "Login as admin and get JWT token (saves to auth_token)"
+          }
+        },
+        {
+          "name": "Technician Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('tech_id', jsonData.technician.id);",
+                  "    pm.collectionVariables.set('tech_token', jsonData.token);",
+                  "    pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Tech\",\n  \"email\": \"newtech@test.com\",\n  \"password\": \"tech123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/technician/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "register"]
+            },
+            "description": "Register a new technician and get JWT token"
+          }
+        },
+        {
+          "name": "Technician Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('tech_id', jsonData.technician.id);",
+                  "    pm.collectionVariables.set('tech_token', jsonData.token);",
+                  "    pm.collectionVariables.set('auth_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newtech@test.com\",\n  \"password\": \"tech123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/technician/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "technician", "login"]
+            },
+            "description": "Login as technician and get JWT token (saves to auth_token)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👨‍💼 Admin Protected",
+      "item": [
+        {
+          "name": "Create Admin (Admin Only)",
           "request": {
             "method": "POST",
             "header": [
@@ -21,15 +200,73 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+              "raw": "{\n  \"name\": \"Second Admin\",\n  \"email\": \"admin2@test.com\",\n  \"password\": \"admin123\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/admin/register",
+              "raw": "{{base_url}}/api/admin/create-admin",
               "host": ["{{base_url}}"],
-              "path": ["api", "admin", "register"]
+              "path": ["api", "admin", "create-admin"]
+            },
+            "description": "Admin creates another admin (requires admin token)"
+          }
+        },
+        {
+          "name": "Create Technician (Admin Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Technician\",\n  \"email\": \"tech2@test.com\",\n  \"password\": \"tech123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/create-technician",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "create-technician"]
+            },
+            "description": "Admin creates a technician (requires admin token)"
+          }
+        },
+        {
+          "name": "Assign Job to Technician",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('job_id', jsonData.job.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          },
-          "response": []
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix Network Issue\",\n  \"description\": \"Router not working properly\",\n  \"address\": \"123 Main St, New York, NY 10001\",\n  \"adminId\": \"{{admin_id}}\",\n  \"techId\": \"{{tech_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/assign-job",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "assign-job"]
+            },
+            "description": "Admin assigns job to technician (requires admin token)"
+          }
         },
         {
           "name": "Get All Admins",
@@ -40,31 +277,9 @@
               "raw": "{{base_url}}/api/admin/all",
               "host": ["{{base_url}}"],
               "path": ["api", "admin", "all"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Assign Job to Technician",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Fix Network Issue\",\n  \"description\": \"Router not working properly, needs diagnostic and repair\",\n  \"address\": \"123 Main St, New York, NY 10001\",\n  \"adminId\": \"{{admin_id}}\",\n  \"techId\": \"{{tech_id}}\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/admin/assign-job",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "assign-job"]
-            }
-          },
-          "response": []
+            "description": "Get all admins (requires admin token)"
+          }
         },
         {
           "name": "Get All Jobs",
@@ -75,9 +290,9 @@
               "raw": "{{base_url}}/api/jobs",
               "host": ["{{base_url}}"],
               "path": ["api", "jobs"]
-            }
-          },
-          "response": []
+            },
+            "description": "Get all jobs (requires any valid token)"
+          }
         },
         {
           "name": "Get Job by ID",
@@ -88,37 +303,15 @@
               "raw": "{{base_url}}/api/jobs/{{job_id}}",
               "host": ["{{base_url}}"],
               "path": ["api", "jobs", "{{job_id}}"]
-            }
-          },
-          "response": []
+            },
+            "description": "Get specific job (requires any valid token)"
+          }
         }
       ]
     },
     {
-      "name": "Technician",
+      "name": "👷 Technician Protected",
       "item": [
-        {
-          "name": "Register Technician",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Mike Technician\",\n  \"email\": \"tech@example.com\",\n  \"password\": \"tech123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/technician/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "technician", "register"]
-            }
-          },
-          "response": []
-        },
         {
           "name": "Get All Technicians",
           "request": {
@@ -128,9 +321,9 @@
               "raw": "{{base_url}}/api/technician/all",
               "host": ["{{base_url}}"],
               "path": ["api", "technician", "all"]
-            }
-          },
-          "response": []
+            },
+            "description": "Get all technicians (requires any valid token)"
+          }
         },
         {
           "name": "Get Technician by ID",
@@ -141,9 +334,9 @@
               "raw": "{{base_url}}/api/technician/{{tech_id}}",
               "host": ["{{base_url}}"],
               "path": ["api", "technician", "{{tech_id}}"]
-            }
-          },
-          "response": []
+            },
+            "description": "Get technician details (requires any valid token)"
+          }
         },
         {
           "name": "Get Technician Jobs",
@@ -154,17 +347,12 @@
               "raw": "{{base_url}}/api/technician/{{tech_id}}/jobs",
               "host": ["{{base_url}}"],
               "path": ["api", "technician", "{{tech_id}}", "jobs"]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Job Workflow",
-      "item": [
+            },
+            "description": "Get technician's assigned jobs (requires any valid token)"
+          }
+        },
         {
-          "name": "1. Accept Job",
+          "name": "Accept Job",
           "request": {
             "method": "PUT",
             "header": [
@@ -178,12 +366,11 @@
               "host": ["{{base_url}}"],
               "path": ["api", "jobs", "{{job_id}}", "accept"]
             },
-            "description": "Technician accepts the assigned job"
-          },
-          "response": []
+            "description": "Technician accepts job (requires technician token)"
+          }
         },
         {
-          "name": "2. Start Job (Enable Tracking)",
+          "name": "Start Job (Enable Tracking)",
           "request": {
             "method": "PUT",
             "header": [
@@ -201,12 +388,11 @@
               "host": ["{{base_url}}"],
               "path": ["api", "jobs", "{{job_id}}", "start"]
             },
-            "description": "Start the job and enable location tracking"
-          },
-          "response": []
+            "description": "Start job and enable tracking (requires technician token)"
+          }
         },
         {
-          "name": "3. Complete Job (Disable Tracking)",
+          "name": "Complete Job (Disable Tracking)",
           "request": {
             "method": "PUT",
             "header": [
@@ -224,15 +410,9 @@
               "host": ["{{base_url}}"],
               "path": ["api", "jobs", "{{job_id}}", "complete"]
             },
-            "description": "Complete the job and turn off location tracking"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Location Tracking",
-      "item": [
+            "description": "Complete job and disable tracking (requires technician token)"
+          }
+        },
         {
           "name": "Toggle Location Tracking",
           "request": {
@@ -252,9 +432,8 @@
               "host": ["{{base_url}}"],
               "path": ["api", "technician", "{{tech_id}}", "toggle-tracking"]
             },
-            "description": "Manually toggle location tracking on/off"
-          },
-          "response": []
+            "description": "Toggle tracking on/off (requires technician token)"
+          }
         },
         {
           "name": "Get Location History",
@@ -266,43 +445,25 @@
               "host": ["{{base_url}}"],
               "path": ["api", "technician", "{{tech_id}}", "location-history"]
             },
-            "description": "Get location history for a technician"
-          },
-          "response": []
+            "description": "Get location history (requires any valid token)"
+          }
         }
       ]
     },
     {
       "name": "Health Check",
       "request": {
+        "auth": {
+          "type": "noauth"
+        },
         "method": "GET",
         "header": [],
         "url": {
           "raw": "{{base_url}}/health",
           "host": ["{{base_url}}"],
           "path": ["health"]
-        }
-      },
-      "response": []
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          ""
-        ]
+        },
+        "description": "Public health check endpoint"
       }
     }
   ],
@@ -314,16 +475,31 @@
     },
     {
       "key": "admin_id",
-      "value": "208f1474-7712-4565-a221-ff3d345f0702",
+      "value": "d87c5789-8d58-4a31-b9b3-b20d82ab267b",
       "type": "string"
     },
     {
       "key": "tech_id",
-      "value": "edd5e42b-5ab4-498a-8765-5cbb9e576876",
+      "value": "e3d9e9db-7d44-4321-b9ff-12a10805eb87",
       "type": "string"
     },
     {
       "key": "job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tech_token",
       "value": "",
       "type": "string"
     }

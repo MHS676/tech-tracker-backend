@@ -1,0 +1,5 @@
+COPY THIS URL INTO POSTMAN:
+
+http://localhost:3000/api/technician/edd5e42b-5ab4-498a-8765-5cbb9e576876/location-history
+
+RESULT: You will see 10 location points!

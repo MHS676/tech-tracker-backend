@@ -314,17 +314,17 @@
     },
     {
       "key": "admin_id",
-      "value": "your-admin-id",
+      "value": "208f1474-7712-4565-a221-ff3d345f0702",
       "type": "string"
     },
     {
       "key": "tech_id",
-      "value": "your-tech-id",
+      "value": "edd5e42b-5ab4-498a-8765-5cbb9e576876",
       "type": "string"
     },
     {
       "key": "job_id",
-      "value": "your-job-id",
+      "value": "",
       "type": "string"
     }
   ]

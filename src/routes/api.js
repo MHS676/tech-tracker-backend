@@ -2,27 +2,37 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const techController = require('../controllers/techController');
+const { authenticate, isAdmin, isTechnician } = require('../middleware/auth');
 
-// ========== Admin Routes ==========
+// ========== Public Auth Routes (No Token Required) ==========
+// Admin Auth
 router.post('/admin/register', adminController.createAdmin);
-router.get('/admin/all', adminController.getAllAdmins);
-router.post('/admin/assign-job', adminController.assignJob);
-router.get('/jobs', adminController.getAllJobs);
-router.get('/jobs/:id', adminController.getJobById);
+router.post('/admin/login', adminController.loginAdmin);
 
-// ========== Technician Routes ==========
+// Technician Auth
 router.post('/technician/register', techController.createTechnician);
-router.get('/technician/all', techController.getAllTechnicians);
-router.get('/technician/:id', techController.getTechnicianById);
-router.get('/technician/:id/jobs', techController.getTechnicianJobs);
+router.post('/technician/login', techController.loginTechnician);
 
-// ========== Job Workflow Routes ==========
-router.put('/jobs/:id/accept', techController.acceptJob);
-router.put('/jobs/:id/start', techController.startJob);
-router.put('/jobs/:id/complete', techController.completeJob);
+// ========== Admin Protected Routes (Admin Token Required) ==========
+router.get('/admin/all', authenticate, isAdmin, adminController.getAllAdmins);
+router.post('/admin/create-admin', authenticate, isAdmin, adminController.createAdminByAdmin);
+router.post('/admin/create-technician', authenticate, isAdmin, adminController.createTechnicianByAdmin);
+router.post('/admin/assign-job', authenticate, isAdmin, adminController.assignJob);
+router.get('/jobs', authenticate, adminController.getAllJobs);
+router.get('/jobs/:id', authenticate, adminController.getJobById);
 
-// ========== Location Tracking Routes ==========
-router.put('/technician/:id/toggle-tracking', techController.toggleTracking);
-router.get('/technician/:id/location-history', techController.getLocationHistory);
+// ========== Technician Protected Routes (Technician Token Required) ==========
+router.get('/technician/all', authenticate, techController.getAllTechnicians);
+router.get('/technician/:id', authenticate, techController.getTechnicianById);
+router.get('/technician/:id/jobs', authenticate, techController.getTechnicianJobs);
+
+// ========== Job Workflow Routes (Token Required) ==========
+router.put('/jobs/:id/accept', authenticate, isTechnician, techController.acceptJob);
+router.put('/jobs/:id/start', authenticate, isTechnician, techController.startJob);
+router.put('/jobs/:id/complete', authenticate, isTechnician, techController.completeJob);
+
+// ========== Location Tracking Routes (Token Required) ==========
+router.put('/technician/:id/toggle-tracking', authenticate, isTechnician, techController.toggleTracking);
+router.get('/technician/:id/location-history', authenticate, techController.getLocationHistory);
 
 module.exports = router;

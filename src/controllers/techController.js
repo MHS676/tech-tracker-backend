@@ -1,17 +1,81 @@
 const prisma = require('../config/prisma');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../middleware/auth');
 
-// Create Technician (Registration)
+// Register Technician (Public)
 exports.createTechnician = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     
+    // Check if technician already exists
+    const existingTech = await prisma.technician.findUnique({ where: { email } });
+    if (existingTech) {
+      return res.status(400).json({ success: false, error: 'Technician already exists' });
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     const technician = await prisma.technician.create({
-      data: { name, email, password }
+      data: { name, email, password: hashedPassword }
     });
     
-    res.status(201).json({ success: true, technician });
+    // Generate token
+    const token = jwt.sign(
+      { id: technician.id, email: technician.email, role: 'technician' },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Remove password from response
+    const { password: _, ...techData } = technician;
+    
+    res.status(201).json({ 
+      success: true, 
+      technician: techData,
+      token,
+      role: 'technician'
+    });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// Technician Login
+exports.loginTechnician = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const technician = await prisma.technician.findUnique({ where: { email } });
+    if (!technician) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, technician.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    // Generate token
+    const token = jwt.sign(
+      { id: technician.id, email: technician.email, role: 'technician' },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Remove password from response
+    const { password: _, ...techData } = technician;
+    
+    res.json({ 
+      success: true, 
+      technician: techData,
+      token,
+      role: 'technician',
+      expiresIn: '24h'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 

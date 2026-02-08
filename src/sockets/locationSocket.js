@@ -18,12 +18,18 @@ module.exports = (io) => {
 
     // When technician sends location update
     socket.on('updateLocation', async (data) => {
-      const { techId, lat, lng } = data;
+      const { techId, lat, lng, jobId } = data;
 
       try {
         // Check if technician is currently tracking
         const tech = await prisma.technician.findUnique({
-          where: { id: techId }
+          where: { id: techId },
+          include: {
+            jobs: {
+              where: { status: 'IN_PROGRESS' },
+              take: 1
+            }
+          }
         });
 
         if (!tech || !tech.isTracking) {
@@ -32,6 +38,8 @@ module.exports = (io) => {
           });
           return;
         }
+
+        const activeJobId = jobId || tech.currentJobId || tech.jobs[0]?.id;
 
         // 1. Update the technician's current position
         await prisma.technician.update({
@@ -43,16 +51,22 @@ module.exports = (io) => {
           }
         });
 
-        // 2. Save to History table
+        // 2. Save to History table with job reference
         await prisma.locationHistory.create({
-          data: { techId, lat, lng }
+          data: { 
+            techId, 
+            lat, 
+            lng,
+            jobId: activeJobId
+          }
         });
 
-        // 3. Emit to Admin Dashboard
+        // 3. Emit to Admin Dashboard with full info
         io.to('admin_room').emit('locationUpdate', { 
           techId, 
           lat, 
           lng,
+          jobId: activeJobId,
           timestamp: new Date(),
           techName: tech.name,
           status: tech.status
@@ -73,14 +87,126 @@ module.exports = (io) => {
       }
     });
 
+    // Start job route (mark start point)
+    socket.on('startRoute', async (data) => {
+      const { techId, jobId, lat, lng } = data;
+
+      try {
+        // Create route record with start point
+        const route = await prisma.technicianRoute.create({
+          data: {
+            techId,
+            jobId,
+            startLat: lat,
+            startLng: lng
+          }
+        });
+
+        // Save start point to location history
+        await prisma.locationHistory.create({
+          data: {
+            techId,
+            jobId,
+            lat,
+            lng,
+            isStartPoint: true
+          }
+        });
+
+        // Update technician with current job
+        await prisma.technician.update({
+          where: { id: techId },
+          data: {
+            currentJobId: jobId,
+            isTracking: true,
+            status: 'ON_WAY',
+            lastLat: lat,
+            lastLng: lng,
+            lastPing: new Date()
+          }
+        });
+
+        // Notify admin about route start
+        io.to('admin_room').emit('routeStarted', {
+          techId,
+          jobId,
+          startLat: lat,
+          startLng: lng,
+          timestamp: new Date()
+        });
+
+        socket.emit('routeStarted', { success: true, route });
+      } catch (error) {
+        console.error('Error starting route:', error);
+        socket.emit('trackingError', { message: 'Failed to start route' });
+      }
+    });
+
+    // End job route (mark end point)
+    socket.on('endRoute', async (data) => {
+      const { techId, jobId, lat, lng } = data;
+
+      try {
+        // Update route with end point
+        const route = await prisma.technicianRoute.update({
+          where: { jobId },
+          data: {
+            endLat: lat,
+            endLng: lng,
+            completedAt: new Date()
+          }
+        });
+
+        // Save end point to location history
+        await prisma.locationHistory.create({
+          data: {
+            techId,
+            jobId,
+            lat,
+            lng,
+            isEndPoint: true
+          }
+        });
+
+        // Update technician
+        await prisma.technician.update({
+          where: { id: techId },
+          data: {
+            currentJobId: null,
+            isTracking: false,
+            status: 'ONLINE',
+            lastLat: lat,
+            lastLng: lng,
+            lastPing: new Date()
+          }
+        });
+
+        // Notify admin about route completion
+        io.to('admin_room').emit('routeCompleted', {
+          techId,
+          jobId,
+          endLat: lat,
+          endLng: lng,
+          route,
+          timestamp: new Date()
+        });
+
+        socket.emit('routeCompleted', { success: true, route });
+      } catch (error) {
+        console.error('Error ending route:', error);
+        socket.emit('trackingError', { message: 'Failed to end route' });
+      }
+    });
+
     // Admin requests current location of all active technicians
     socket.on('requestAllLocations', async () => {
       try {
         const techs = await prisma.technician.findMany({
           where: {
-            isTracking: true,
-            lastLat: { not: null },
-            lastLng: { not: null }
+            OR: [
+              { isTracking: true },
+              { status: { not: 'OFFLINE' } }
+            ]
           },
           select: {
             id: true,
@@ -89,7 +215,20 @@ module.exports = (io) => {
             lastLat: true,
             lastLng: true,
             status: true,
-            lastPing: true
+            lastPing: true,
+            isTracking: true,
+            currentJobId: true,
+            jobs: {
+              where: { status: 'IN_PROGRESS' },
+              select: {
+                id: true,
+                title: true,
+                address: true,
+                addressLat: true,
+                addressLng: true
+              },
+              take: 1
+            }
           }
         });
 
@@ -99,13 +238,80 @@ module.exports = (io) => {
       }
     });
 
+    // Admin requests active routes (jobs in progress with location data)
+    socket.on('requestActiveRoutes', async () => {
+      try {
+        const activeRoutes = await prisma.technicianRoute.findMany({
+          where: {
+            completedAt: null
+          },
+          include: {
+            technician: {
+              select: {
+                id: true,
+                name: true,
+                lastLat: true,
+                lastLng: true,
+                status: true
+              }
+            },
+            job: {
+              select: {
+                id: true,
+                title: true,
+                address: true,
+                addressLat: true,
+                addressLng: true,
+                status: true
+              }
+            }
+          }
+        });
+
+        socket.emit('activeRoutes', activeRoutes);
+      } catch (error) {
+        console.error('Error fetching active routes:', error);
+      }
+    });
+
+    // Get route history for a specific job
+    socket.on('requestJobRoute', async (jobId) => {
+      try {
+        const route = await prisma.technicianRoute.findUnique({
+          where: { jobId },
+          include: {
+            technician: {
+              select: { id: true, name: true }
+            },
+            job: {
+              select: { id: true, title: true, address: true }
+            }
+          }
+        });
+
+        const locationHistory = await prisma.locationHistory.findMany({
+          where: { jobId },
+          orderBy: { recordedAt: 'asc' }
+        });
+
+        socket.emit('jobRoute', { route, locationHistory });
+      } catch (error) {
+        console.error('Error fetching job route:', error);
+      }
+    });
+
     // Admin requests location history for specific technician
     socket.on('requestHistory', async (techId) => {
       try {
         const history = await prisma.locationHistory.findMany({
           where: { techId },
           orderBy: { recordedAt: 'desc' },
-          take: 100
+          take: 100,
+          include: {
+            job: {
+              select: { id: true, title: true }
+            }
+          }
         });
 
         socket.emit('locationHistory', { techId, history });

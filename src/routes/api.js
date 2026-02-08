@@ -34,5 +34,8 @@ router.put('/jobs/:id/complete', authenticate, isTechnician, techController.comp
 // ========== Location Tracking Routes (Token Required) ==========
 router.put('/technician/:id/toggle-tracking', authenticate, isTechnician, techController.toggleTracking);
 router.get('/technician/:id/location-history', authenticate, techController.getLocationHistory);
+router.get('/routes/active', authenticate, techController.getActiveRoutes);
+router.get('/routes/job/:jobId', authenticate, techController.getJobRoute);
+router.get('/technicians/locations', authenticate, techController.getTechniciansWithLocation);
 
 module.exports = router;

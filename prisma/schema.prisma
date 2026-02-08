@@ -26,38 +26,62 @@ model Technician {
   lastLng         Float?
   status          TechStatus @default(OFFLINE)
   isTracking      Boolean    @default(false)
+  currentJobId    String?
   lastPing        DateTime?  @default(now())
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   locationHistory LocationHistory[]
   jobs            Job[]
+  routes          TechnicianRoute[]
 }
 
 model Job {
-  id          String     @id @default(uuid())
-  title       String
-  description String
-  address     String
-  adminId     String
-  techId      String?
-  status      JobStatus  @default(PENDING)
-  assignedAt  DateTime   @default(now())
-  acceptedAt  DateTime?
-  startedAt   DateTime?
-  completedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  admin       Admin      @relation(fields: [adminId], references: [id], onDelete: Cascade)
-  technician  Technician? @relation(fields: [techId], references: [id], onDelete: SetNull)
+  id              String     @id @default(uuid())
+  title           String
+  description     String
+  address         String
+  addressLat      Float?
+  addressLng      Float?
+  adminId         String
+  techId          String?
+  status          JobStatus  @default(PENDING)
+  assignedAt      DateTime   @default(now())
+  acceptedAt      DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  admin           Admin      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  technician      Technician? @relation(fields: [techId], references: [id], onDelete: SetNull)
+  locationHistory LocationHistory[]
+  route           TechnicianRoute?
 }
 
 model LocationHistory {
   id           Int        @id @default(autoincrement())
   techId       String
+  jobId        String?
   lat          Float
   lng          Float
+  isStartPoint Boolean    @default(false)
+  isEndPoint   Boolean    @default(false)
   recordedAt   DateTime   @default(now())
   technician   Technician @relation(fields: [techId], references: [id], onDelete: Cascade)
+  job          Job?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+}
+
+model TechnicianRoute {
+  id           Int        @id @default(autoincrement())
+  techId       String
+  jobId        String     @unique
+  startLat     Float
+  startLng     Float
+  endLat       Float?
+  endLng       Float?
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+  technician   Technician @relation(fields: [techId], references: [id], onDelete: Cascade)
+  job          Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
 
 enum TechStatus {

@@ -260,10 +260,122 @@ exports.getLocationHistory = async (req, res) => {
       orderBy: {
         recordedAt: 'desc'
       },
-      take: 500
+      take: 500,
+      include: {
+        job: {
+          select: { id: true, title: true }
+        }
+      }
     });
     
     res.json({ success: true, locationHistory });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Get all active routes (technicians currently on jobs)
+exports.getActiveRoutes = async (req, res) => {
+  try {
+    const routes = await prisma.technicianRoute.findMany({
+      where: {
+        completedAt: null
+      },
+      include: {
+        technician: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            lastLat: true,
+            lastLng: true,
+            status: true,
+            isTracking: true,
+            lastPing: true
+          }
+        },
+        job: {
+          select: {
+            id: true,
+            title: true,
+            address: true,
+            addressLat: true,
+            addressLng: true,
+            status: true
+          }
+        }
+      }
+    });
+    
+    res.json({ success: true, routes });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Get route for a specific job
+exports.getJobRoute = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    const route = await prisma.technicianRoute.findUnique({
+      where: { jobId },
+      include: {
+        technician: {
+          select: { id: true, name: true }
+        },
+        job: {
+          select: { id: true, title: true, address: true }
+        }
+      }
+    });
+    
+    const locationHistory = await prisma.locationHistory.findMany({
+      where: { jobId },
+      orderBy: { recordedAt: 'asc' }
+    });
+    
+    res.json({ success: true, route, locationHistory });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Get all technicians with current location
+exports.getTechniciansWithLocation = async (req, res) => {
+  try {
+    const technicians = await prisma.technician.findMany({
+      where: {
+        OR: [
+          { isTracking: true },
+          { status: { not: 'OFFLINE' } }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        lastLat: true,
+        lastLng: true,
+        status: true,
+        lastPing: true,
+        isTracking: true,
+        currentJobId: true,
+        jobs: {
+          where: { status: 'IN_PROGRESS' },
+          select: {
+            id: true,
+            title: true,
+            address: true,
+            addressLat: true,
+            addressLng: true
+          },
+          take: 1
+        }
+      }
+    });
+    
+    res.json({ success: true, technicians });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // No URL here for Prisma 7
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jobs      Job[]
+}
+
+model Technician {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  password        String
+  lastLat         Float?
+  lastLng         Float?
+  status          TechStatus @default(OFFLINE)
+  isTracking      Boolean    @default(false)
+  currentJobId    String?
+  lastPing        DateTime?  @default(now())
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  locationHistory LocationHistory[]
+  jobs            Job[]
+  routes          TechnicianRoute[]
+}
+
+model Job {
+  id              String     @id @default(uuid())
+  title           String
+  description     String
+  address         String
+  addressLat      Float?
+  addressLng      Float?
+  adminId         String
+  techId          String?
+  status          JobStatus  @default(PENDING)
+  assignedAt      DateTime   @default(now())
+  acceptedAt      DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  admin           Admin      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  technician      Technician? @relation(fields: [techId], references: [id], onDelete: SetNull)
+  locationHistory LocationHistory[]
+  route           TechnicianRoute?
+}
+
+model LocationHistory {
+  id           Int        @id @default(autoincrement())
+  techId       String
+  jobId        String?
+  lat          Float
+  lng          Float
+  isStartPoint Boolean    @default(false)
+  isEndPoint   Boolean    @default(false)
+  recordedAt   DateTime   @default(now())
+  technician   Technician @relation(fields: [techId], references: [id], onDelete: Cascade)
+  job          Job?       @relation(fields: [jobId], references: [id], onDelete: SetNull)
+}
+
+model TechnicianRoute {
+  id           Int        @id @default(autoincrement())
+  techId       String
+  jobId        String     @unique
+  startLat     Float
+  startLng     Float
+  endLat       Float?
+  endLng       Float?
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+  technician   Technician @relation(fields: [techId], references: [id], onDelete: Cascade)
+  job          Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+enum TechStatus {
+  ONLINE
+  OFFLINE
+  ON_WAY
+  ON_SITE
+}
+
+enum JobStatus {
+  PENDING
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

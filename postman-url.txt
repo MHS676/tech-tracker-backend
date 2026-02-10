@@ -1,0 +1,8 @@
+Copy this URL into Postman:
+
+http://localhost:3000/api/technician/edd5e42b-5ab4-498a-8765-5cbb9e576876/location-history
+
+Or set these variables in Postman collection:
+- tech_id = edd5e42b-5ab4-498a-8765-5cbb9e576876
+- admin_id = 208f1474-7712-4565-a221-ff3d345f0702
+- base_url = http://localhost:3000

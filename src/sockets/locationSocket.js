@@ -399,8 +399,12 @@ module.exports = (io) => {
       }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('User disconnected:', socket.id);
+      
+      // Find and update any technician associated with this socket
+      // Note: You'd need to track socket -> techId mapping
+      // For now, we'll rely on lastPing timeout on the frontend
     });
   });
 };

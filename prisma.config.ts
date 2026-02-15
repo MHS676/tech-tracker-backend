@@ -11,4 +11,7 @@ export default defineConfig({
     // We use process.env directly here to ensure it's found
     url: process.env.DATABASE_URL,
   },
+  migrations: {
+    seed: "tsx prisma/seed.ts",
+  },
 });

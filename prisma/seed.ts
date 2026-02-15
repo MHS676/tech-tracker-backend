@@ -1,7 +1,8 @@
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/client';
+import { PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -11,21 +12,40 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // Hash passwords
+  const hashedTechPassword = await bcrypt.hash('demo123', 10);
+  const hashedAdminPassword = await bcrypt.hash('admin123', 10);
+
+  // Create technician
   await prisma.technician.upsert({
-    where: { email: 'tech1@example.com' },
+    where: { email: 'demo@tech.com' },
     update: {},
     create: {
-      id: 'tech_01',
-      name: 'Yusuf',
-      email: 'tech1@example.com',
-      status: 'ONLINE',
+      id: 'tech_demo',
+      name: 'Demo Tech',
+      email: 'demo@tech.com',
+      password: hashedTechPassword,
+      status: 'OFFLINE',
     },
   });
-  console.log('✅ Seed successful: Technician tech_01 created.');
+  console.log('✅ Technician created: demo@tech.com / demo123');
+
+  // Create admin
+  await prisma.admin.upsert({
+    where: { email: 'superadmin@test.com' },
+    update: {},
+    create: {
+      id: 'admin_super',
+      name: 'Super Admin',
+      email: 'superadmin@test.com',
+      password: hashedAdminPassword,
+    },
+  });
+  console.log('✅ Admin created: superadmin@test.com / admin123');
 }
 
 main()
-  .catch(e => console.error(e))
+  .catch(e => console.error('❌ Seed error:', e))
   .finally(async () => {
     await prisma.$disconnect();
   });

@@ -16,7 +16,11 @@ router.post('/technician/login', techController.loginTechnician);
 // ========== Admin Protected Routes (Admin Token Required) ==========
 router.get('/admin/all', authenticate, isAdmin, adminController.getAllAdmins);
 router.post('/admin/create-admin', authenticate, isAdmin, adminController.createAdminByAdmin);
+router.put('/admin/:id', authenticate, isAdmin, adminController.updateAdmin);
+router.delete('/admin/:id', authenticate, isAdmin, adminController.deleteAdmin);
 router.post('/admin/create-technician', authenticate, isAdmin, adminController.createTechnicianByAdmin);
+router.put('/admin/technician/:id', authenticate, isAdmin, adminController.updateTechnician);
+router.delete('/admin/technician/:id', authenticate, isAdmin, adminController.deleteTechnician);
 router.post('/admin/assign-job', authenticate, isAdmin, adminController.assignJob);
 router.get('/jobs', authenticate, adminController.getAllJobs);
 router.get('/jobs/:id', authenticate, adminController.getJobById);

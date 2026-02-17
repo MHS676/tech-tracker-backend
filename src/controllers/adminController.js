@@ -233,3 +233,78 @@ exports.getJobById = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// Update Admin
+exports.updateAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+    
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (password) updateData.password = await bcrypt.hash(password, 10);
+    
+    const admin = await prisma.admin.update({
+      where: { id },
+      data: updateData
+    });
+    
+    const { password: _, ...adminData } = admin;
+    res.json({ success: true, admin: adminData, message: 'Admin updated successfully' });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// Delete Admin
+exports.deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Prevent deleting yourself (optional safety check)
+    if (req.user.id === id) {
+      return res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+    }
+    
+    await prisma.admin.delete({ where: { id } });
+    res.json({ success: true, message: 'Admin deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// Update Technician
+exports.updateTechnician = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password } = req.body;
+    
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (password) updateData.password = await bcrypt.hash(password, 10);
+    
+    const technician = await prisma.technician.update({
+      where: { id },
+      data: updateData
+    });
+    
+    const { password: _, ...techData } = technician;
+    res.json({ success: true, technician: techData, message: 'Technician updated successfully' });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// Delete Technician
+exports.deleteTechnician = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await prisma.technician.delete({ where: { id } });
+    res.json({ success: true, message: 'Technician deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};

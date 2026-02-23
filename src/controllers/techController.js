@@ -380,3 +380,52 @@ exports.getTechniciansWithLocation = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// Background location update (no auth required, called by background task)
+exports.updateBackgroundLocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lat, lng, jobId } = req.body;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ success: false, error: 'Latitude and longitude required' });
+    }
+
+    // Update technician location
+    const tech = await prisma.technician.update({
+      where: { id: parseInt(id) },
+      data: {
+        lastLat: lat,
+        lastLng: lng,
+        lastPing: new Date(),
+      },
+    });
+
+    // Save to location history
+    await prisma.locationHistory.create({
+      data: {
+        technicianId: parseInt(id),
+        latitude: lat,
+        longitude: lng,
+        jobId: jobId ? parseInt(jobId) : null,
+        timestamp: new Date(),
+      },
+    });
+
+    // Emit socket update to admin dashboard
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('location:update', {
+        techId: parseInt(id),
+        lat,
+        lng,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Background location update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

@@ -42,4 +42,7 @@ router.get('/routes/active', authenticate, techController.getActiveRoutes);
 router.get('/routes/job/:jobId', authenticate, techController.getJobRoute);
 router.get('/technicians/locations', authenticate, techController.getTechniciansWithLocation);
 
+// Background location update (no auth - called by background task)
+router.post('/technician/:id/background-location', techController.updateBackgroundLocation);
+
 module.exports = router;
